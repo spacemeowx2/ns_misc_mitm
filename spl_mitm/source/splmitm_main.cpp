@@ -71,31 +71,11 @@ void __appInit(void) {
         fatalSimple(rc);
     }
 
-    #define SOCK_BUFFERSIZE 0x100
-    const SocketInitConfig socketInitConfig = {
-        .bsdsockets_version = 1,
-
-        .tcp_tx_buf_size = 8 * SOCK_BUFFERSIZE,
-        .tcp_rx_buf_size = 8 * SOCK_BUFFERSIZE,
-        .tcp_tx_buf_max_size = 16 * SOCK_BUFFERSIZE,
-        .tcp_rx_buf_max_size = 16 * SOCK_BUFFERSIZE,
-
-        .udp_tx_buf_size = 0x2400,
-        .udp_rx_buf_size = 0xA500,
-
-        .sb_efficiency = 4,
-    };
-    rc = socketInitialize(&socketInitConfig);
-    if (R_FAILED(rc)) {
-        fatalSimple(rc);
-    }
-
     LogFormat("__appInit done");
 }
 
 void __appExit(void) {
     /* Cleanup services. */
-    socketExit();
     fsdevUnmountAll();
     fsExit();
     smExit();
@@ -106,25 +86,7 @@ struct SplMitmManagerOptions {
     static const size_t MaxDomains = 0x10;
     static const size_t MaxDomainObjects = 0x100;
 };
-class SplServiceSession : public ServiceSession {
-    public:
-        SplServiceSession(Handle s_h, size_t pbs, ServiceObjectHolder &&h)  : ServiceSession(s_h, pbs, std::move(h)) { }
-
-        virtual void PreProcessRequest(IpcResponseContext *ctx) {
-            LogFormat("Request cmd_id %" PRIu64 " type %d", ctx->cmd_id, ctx->cmd_type);
-        }
-        virtual void PostProcessResponse(IpcResponseContext *ctx) {
-            LogFormat("Reply rc %d", ctx->rc);
-        }
-};
-template<typename ManagerOptions = SplMitmManagerOptions>
-class SplMitmManager : public WaitableManager<ManagerOptions> {
-    public:
-        SplMitmManager(u32 n, u32 ss = 0x8000) : WaitableManager<ManagerOptions>(n, ss) {}
-        virtual void AddSession(Handle server_h, ServiceObjectHolder &&service) override {
-            this->AddWaitable(new SplServiceSession(server_h, ManagerOptions::PointerBufferSize, std::move(service)));
-        }
-};
+using SplMitmManager = WaitableManager<SplMitmManagerOptions>;
 
 int main(int argc, char **argv)
 {
@@ -134,6 +96,11 @@ int main(int argc, char **argv)
 
     /* Create spl: mitm. */
     AddMitmServerToManager<SplMitMService>(server_manager, "spl:", 3);
+    AddMitmServerToManager<SplMitMService>(server_manager, "spl:mig", 3);
+    AddMitmServerToManager<SplMitMService>(server_manager, "spl:fs", 3);
+    AddMitmServerToManager<SplMitMService>(server_manager, "spl:ssl", 3);
+    AddMitmServerToManager<SplMitMService>(server_manager, "spl:es", 3);
+    AddMitmServerToManager<SplMitMService>(server_manager, "spl:manu", 3);
 
     /* Loop forever, servicing our services. */
     server_manager->Process();

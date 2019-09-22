@@ -18,7 +18,7 @@ class SplMitMService : public IMitmServiceObject {
         };  
     public:
         SplMitMService(std::shared_ptr<Service> s, u64 pid, sts::ncm::TitleId tid) : IMitmServiceObject(s, pid, tid) {
-            /* ... */
+            LogFormat("SplMitMService pid: %" PRIu64 " tid: %" PRIx64, pid, tid);
         }
         
         static bool ShouldMitm(u64 pid, sts::ncm::TitleId tid) {
@@ -26,7 +26,10 @@ class SplMitMService : public IMitmServiceObject {
             return tid == sts::ncm::TitleId::Ldn;
         }
         
-        static void PostProcess(IMitmServiceObject *obj, IpcResponseContext *ctx) {};
+        static void PostProcess(IMitmServiceObject *obj, IpcResponseContext *ctx) {
+            LogFormat("PostProcess cmdid %d rc %x", ctx->cmd_id, ctx->rc);
+            LogHex(ctx->out_data, 0x100);
+        };
     protected:
         /* Overridden commands. */
         Result GenerateAesKek(Out<AesKey> out, AesKey key_source, u32 generation, u32 option);
