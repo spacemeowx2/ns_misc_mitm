@@ -19,9 +19,9 @@
 
 #include "splmitm_service.hpp"
 
-Result SplMitMService::GenerateAesKek(Out<AesKey> out, AesKey key_source, u32 generation, u32 option) {
-    LogFormat("SplMitMService::GenerateAesKek generation: %" PRIu32 ", option: %" PRIu32 "key_source", generation, option);
-    LogHex(&key_source, sizeof(key_source));
+Result SplMitMService::GenerateAesKek(Out<AesKey> out, GenerateAesKekParams p) {
+    LogFormat("SplMitMService::GenerateAesKek generation: %" PRIu32 ", option: %" PRIu32 ", key_source", p.generation, p.option);
+    LogHex(&p.key_source, sizeof(p.key_source));
 
     return ResultAtmosphereMitmShouldForwardToSession;
 }

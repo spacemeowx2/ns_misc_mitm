@@ -10,6 +10,12 @@ struct AesKey {
     u64 p2;
 };
 
+struct GenerateAesKekParams {
+    AesKey key_source;
+    u32 generation;
+    u32 option;
+};
+
 class SplMitMService : public IMitmServiceObject {
     private:
         enum class CommandId {
@@ -28,11 +34,11 @@ class SplMitMService : public IMitmServiceObject {
         
         static void PostProcess(IMitmServiceObject *obj, IpcResponseContext *ctx) {
             LogFormat("PostProcess cmdid %d rc %x", ctx->cmd_id, ctx->rc);
-            LogHex(ctx->out_data, 0x100);
+            LogHex(armGetTls(), 0x100);
         };
     protected:
         /* Overridden commands. */
-        Result GenerateAesKek(Out<AesKey> out, AesKey key_source, u32 generation, u32 option);
+        Result GenerateAesKek(Out<AesKey> out, GenerateAesKekParams p);
         Result GenerateAesKey(Out<AesKey> out, AesKey access_key, AesKey key_source);
     public:
         DEFINE_SERVICE_DISPATCH_TABLE {
