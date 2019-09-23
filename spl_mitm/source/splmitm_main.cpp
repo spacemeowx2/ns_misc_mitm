@@ -23,6 +23,7 @@
 #include <stratosphere.hpp>
 
 #include "splmitm_service.hpp"
+#include "wlan_service.hpp"
 
 extern "C" {
     extern u32 __start__;
@@ -101,6 +102,7 @@ int main(int argc, char **argv)
     AddMitmServerToManager<SplMitMService>(server_manager, "spl:ssl", 3);
     AddMitmServerToManager<SplMitMService>(server_manager, "spl:es", 3);
     AddMitmServerToManager<SplMitMService>(server_manager, "spl:manu", 3);
+    AddMitmServerToManager<WlanMitMService>(server_manager, "wlan:lcl", 3);
 
     /* Loop forever, servicing our services. */
     server_manager->Process();
